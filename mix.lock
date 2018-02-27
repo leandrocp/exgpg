@@ -1,2 +1,4 @@
-%{"porcelain": {:hex, :porcelain, "2.0.0"},
-  "uuid": {:hex, :uuid, "0.1.5"}}
+%{
+  "porcelain": {:git, "https://github.com/alco/porcelain.git", "acfc0f0a6987aadb08f495a578e22ef624342685", []},
+  "uuid": {:hex, :uuid, "1.1.8", "e22fc04499de0de3ed1116b770c7737779f226ceefa0badb3592e64d5cfb4eb9", [:mix], [], "hexpm"},
+}

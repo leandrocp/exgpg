@@ -4,10 +4,10 @@ defmodule Exgpg.Mixfile do
   def project do
     [app: :exgpg,
      version: "0.0.3",
-     elixir: "~> 1.0.0",
-     deps: deps,
-     package: package,
-     description: description,
+     elixir: "~> 1.0",
+     deps: deps(),
+     package: package(),
+     description: description(),
      source_url: "https://github.com/rozap/exgpg"]
   end
 
@@ -46,8 +46,9 @@ defmodule Exgpg.Mixfile do
   # Type `mix help deps` for more examples and options
   defp deps do
     [
-      { :uuid, "~> 0.1.5" },
-      { :porcelain, "~> 2.0.0"}
+      { :uuid, "~> 1.0" },
+      { :porcelain, git: "https://github.com/alco/porcelain.git" }
+      # { :porcelain, "~> 2.0"}
     ]
   end
 end
