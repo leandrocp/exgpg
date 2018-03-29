@@ -1,6 +1,6 @@
 defmodule Exgpg do
 
-  @gpg_bin "gpg1"
+  @gpg_bin "gpg"
 
   @global_args [no_use_agent: true, batch: true, no_default_keyring: true, trust_model: :always]
 
