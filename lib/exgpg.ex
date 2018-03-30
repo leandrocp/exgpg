@@ -1,7 +1,4 @@
 defmodule Exgpg do
-
-  @gpg_bin "gpg"
-
   @global_args [no_use_agent: true, batch: true, no_default_keyring: true, trust_model: :always]
 
   @without_input [
@@ -57,11 +54,13 @@ defmodule Exgpg do
   end
 
   defp gpg(args, user_args, spawn_opts) do
+    gpg_bin_path = System.find_executable("gpg")
+
     argv = args
     |> Enum.concat(user_args)
     |> OptionParser.to_argv
-    # IO.puts "Running  gpg #{Enum.join(argv, " ")}"
-    Porcelain.spawn(@gpg_bin, argv, spawn_opts)
+    # IO.puts "Running  #{gpg_bin_path} #{Enum.join(argv, " ")}"
+    Porcelain.spawn(gpg_bin_path, argv, spawn_opts)
   end
 
   def adapt_in({input, _args, _user_args}, :gen_key) do
