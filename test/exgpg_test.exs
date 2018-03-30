@@ -189,7 +189,7 @@ defmodule ExgpgTest do
   end
 
   test "can sign and verify with custom gpg bin path" do
-    gpg_bin_path = "/usr/local/bin/gpg1"
+    gpg_bin_path = System.find_executable("gpg")
     {:ok, proc} = "hello world"
     |> Exgpg.sign([{:recipient, "alice@alice.com"} | rings_for("alice")], [{:gpg_bin_path, gpg_bin_path}])
     |> output
