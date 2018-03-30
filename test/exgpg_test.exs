@@ -1,7 +1,7 @@
 defmodule ExgpgTest do
   use ExUnit.Case
   import Exgpg.Test.Utils
- 
+
   setup_all do
     Porcelain.reinit(Porcelain.Driver.Goon)
     gen_key_for("alice")
@@ -10,11 +10,11 @@ defmodule ExgpgTest do
   end
 
   ##
-  # This will re-init all the fixtures, as some will change 
+  # This will re-init all the fixtures, as some will change
   # due to tests adding keys and such
   setup do
-    source = Path.join([__DIR__, "fixtures/originals"])    
-    dest = Path.join([__DIR__, "fixtures"])    
+    source = Path.join([__DIR__, "fixtures/originals"])
+    dest = Path.join([__DIR__, "fixtures"])
     source
     |> File.ls!
     |> Enum.each(fn f -> 
@@ -25,7 +25,6 @@ defmodule ExgpgTest do
     end)
   end
 
- 
   test "can get an error message when things don't work" do
     proc = "hello world"
     |> Exgpg.encrypt([{:recipient, "alice@alice.com"} | rings_for("alice")])
@@ -82,16 +81,14 @@ defmodule ExgpgTest do
     Exgpg.list_key(rings_for("alice"))
   end
 
-
   test "can export an ascii armored key" do
     result = "alice@alice.com"
     |> Exgpg.export_key([{:armor, true} | rings_for("alice")])
     |> output
     |> Enum.into("")
-    
+
     "-----BEGIN PGP PUBLIC KEY BLOCK-----" <> _rest = result
   end
-
 
   test "can import a key" do
     {:path, fixture("mine.gpg")}
@@ -117,7 +114,7 @@ defmodule ExgpgTest do
   # test "can verify a signed document" do
   #   path = fixture("hello_world.sig")
   #   {:ok, proc} = Exgpg.verify({:path, path}, rings_for("alice"))
-  #   assert proc.status == 0    
+  #   assert proc.status == 0
   #   {:ok, proc} = Exgpg.verify("foobar", rings_for("alice"))
   #   assert proc.status == 2
   # end
@@ -130,7 +127,6 @@ defmodule ExgpgTest do
     assert proc.status == 0
   end
 
-
   test "can sign and decrypt" do
     out = "hello world"
     |> Exgpg.sign([{:recipient, "alice@alice.com"} | rings_for("alice")])
@@ -140,7 +136,6 @@ defmodule ExgpgTest do
     |> Enum.into("")
     assert out == "hello world"
   end
-
 
   test "sending invalid stuff to gen key" do
     {:ok, proc} = Exgpg.gen_key([nope: "lol"])
@@ -172,5 +167,28 @@ defmodule ExgpgTest do
     [{result, _}] = Exgpg.list_key([keyring: pub_ring])
     assert "Foo Bar <foo@bar.com>" in result
     assert "pub" in result
+  end
+
+  test "can opt for a custom gpg bin" do
+    gpg_bin_path = System.find_executable("gpg")
+    out = Exgpg.version(gpg_bin_path: gpg_bin_path) |> output |> Enum.into("")
+    assert String.contains?(out, "GnuPG")
+    assert String.contains?(out, "License GPLv3+")
+  end
+
+  test "default to gpg bin when gpg_bin_path is invalid" do
+    gpg_bin_path = System.find_executable("invalid_gpg")
+    out = Exgpg.version(gpg_bin_path: gpg_bin_path) |> output |> Enum.into("")
+    assert String.contains?(out, "GnuPG")
+    assert String.contains?(out, "License GPLv3+")
+  end
+
+  test "can sign and verify with custom gpg bin path" do
+    gpg_bin_path = "/usr/local/bin/gpg1"
+    {:ok, proc} = "hello world"
+    |> Exgpg.sign([{:recipient, "alice@alice.com"} | rings_for("alice")], [{:gpg_bin_path, gpg_bin_path}])
+    |> output
+    |> Exgpg.verify([{:recipient, "alice@alice.com"} | rings_for("alice")], [{:gpg_bin_path, gpg_bin_path}])
+    assert proc.status == 0
   end
 end

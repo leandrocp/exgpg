@@ -17,63 +17,64 @@ defmodule Exgpg do
 
 
   Enum.each(@without_input, fn {command, args} ->
-    def unquote(command)(user_args \\ []) do
+    def unquote(command)(user_args \\ [], opts \\ []) do
       args = [{unquote(command), true} | unquote(args)]
-      {nil, args, user_args}
+      {nil, args, user_args, opts}
       |> run(unquote(command))
       |> adapt_out(unquote(command))
     end
   end)
 
   Enum.each(@with_input, fn {command, args} ->
-    def unquote(command)(input \\ nil, user_args \\ []) do
+    def unquote(command)(input \\ nil, user_args \\ [], opts \\ []) do
       args = [{unquote(command), true} | unquote(args)]
-      {input, args, user_args}
+      {input, args, user_args, opts}
       |> adapt_in(unquote(command))
       |> run(unquote(command))
       |> adapt_out(unquote(command))
     end
   end)
 
-  def export_key(email, args \\ []) do
-    run({nil, args, [{:export, email}]}, :ok)
+  def export_key(email, args \\ [], opts \\ []) do
+    run({nil, args, [{:export, email}], opts}, :ok)
   end
 
-  def import_key(input, user_args \\ []) do
-    run({input, [{:'import', true} | @global_args], user_args}, :ok)
+  def import_key(input, user_args \\ [], opts \\ []) do
+    run({input, [{:'import', true} | @global_args], user_args, opts}, :ok)
   end
 
-  defp run({nil, args, user_args}, _) do
+  defp run({nil, args, user_args, opts}, _) do
     spawn_opts = [out: :stream, err: :string]
-    gpg(args, user_args, spawn_opts)
+    gpg(args, user_args, spawn_opts, opts)
   end
 
-  defp run({input, args, user_args}, _) do
+  defp run({input, args, user_args, opts}, _) do
     spawn_opts = [in: input, out: :stream, result: :keep, err: :string]
-    gpg(args, user_args, spawn_opts)
+    gpg(args, user_args, spawn_opts, opts)
   end
 
-  defp gpg(args, user_args, spawn_opts) do
-    gpg_bin_path = System.find_executable("gpg")
-
+  defp gpg(args, user_args, spawn_opts, opts) do
     argv = args
     |> Enum.concat(user_args)
     |> OptionParser.to_argv
-    # IO.puts "Running  #{gpg_bin_path} #{Enum.join(argv, " ")}"
-    Porcelain.spawn(gpg_bin_path, argv, spawn_opts)
+    # IO.puts "Running  #{gpg_bin_path(opts)} #{Enum.join(argv, " ")}"
+    Porcelain.spawn(gpg_bin_path(opts), argv, spawn_opts)
   end
 
-  def adapt_in({input, _args, _user_args}, :gen_key) do
+  def gpg_bin_path(args) do
+    Keyword.get(args, :gpg_bin_path) || System.find_executable("gpg")
+  end
+
+  def adapt_in({input, _args, _user_args, opts}, :gen_key) do
     input = input
     |> Enum.filter(fn {key, _} -> key != :gen_key end)    
     |> Enum.map(fn {key, val} -> {Atom.to_string(key), val} end)
     |> Enum.map(fn {key, val} -> to_genkey(key, val) end)
     |> Enum.join("\n")
-    {input, [{:gen_key, true} | @global_args], []}
+    {input, [{:gen_key, true} | @global_args], [], opts}
   end
 
-  def adapt_in({input, args, user_args}, _), do: {input, args, user_args}
-
+  def adapt_in({input, args, user_args, opts}, _), do: {input, args, user_args, opts}
 
   def adapt_out(result, :list_key) do
     result.out
