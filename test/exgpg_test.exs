@@ -81,6 +81,11 @@ defmodule ExgpgTest do
     Exgpg.list_key(rings_for("alice"))
   end
 
+  test "get a list of keys with a custom gpg bin path" do
+    gpg_bin_path = System.find_executable("gpg")
+    Exgpg.list_key(rings_for("alice"), gpg_bin_path: gpg_bin_path)
+  end
+
   test "can export an ascii armored key" do
     result = "alice@alice.com"
     |> Exgpg.export_key([{:armor, true} | rings_for("alice")])
