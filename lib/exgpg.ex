@@ -1,4 +1,6 @@
 defmodule Exgpg do
+  require Logger
+
   @global_args [no_use_agent: true, batch: true, no_default_keyring: true, trust_model: :always]
 
   @without_input [
@@ -57,9 +59,15 @@ defmodule Exgpg do
     argv = args
     |> Enum.concat(user_args)
     |> OptionParser.to_argv
-    # IO.puts "Running  #{gpg_bin_path(opts)} #{Enum.join(argv, " ")}"
+
+    if debug?(opts) do
+      Logger.info "#{gpg_bin_path(opts)} #{Enum.join(argv, " ")}"
+    end
+
     Porcelain.spawn(gpg_bin_path(opts), argv, spawn_opts)
   end
+
+  def debug?(opts), do: Keyword.get(opts, :debug, false)
 
   def gpg_bin_path(args) do
     Keyword.get(args, :gpg_bin_path) || System.find_executable("gpg")
