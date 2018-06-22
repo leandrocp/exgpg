@@ -60,14 +60,10 @@ defmodule Exgpg do
     |> Enum.concat(user_args)
     |> OptionParser.to_argv
 
-    if debug?(opts) do
-      Logger.info "#{gpg_bin_path(opts)} #{Enum.join(argv, " ")}"
-    end
+    Logger.debug "#{gpg_bin_path(opts)} #{Enum.join(argv, " ")}"
 
     Porcelain.spawn(gpg_bin_path(opts), argv, spawn_opts)
   end
-
-  def debug?(opts), do: Keyword.get(opts, :debug, false)
 
   def gpg_bin_path(args) do
     Keyword.get(args, :gpg_bin_path) || System.find_executable("gpg")
